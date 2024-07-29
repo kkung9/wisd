@@ -117,8 +117,37 @@ def pick_n_neighbors():
 
     print("Mean best number of neighbors: " + str(np.mean(n)))
 
+def final_performance():
+    scores = []
+    for i in range(20):
+        print(i)
+        train, test = train_test_split(past_plate)
+        X1_train = train[["pitch_speed", "pitch_spin", "x_pos", "y_pos", "z_pos", "x_vel", "y_vel", "z_vel", "x_acc", "y_acc", "z_acc"]]
+        X2_train_x = train[["x0_extrap"]]
+        X2_train_z = train[["z0_extrap"]]
+        y_train = train["pitch_result"]
+        X1_test = test[["pitch_speed", "pitch_spin", "x_pos", "y_pos", "z_pos", "x_vel", "y_vel", "z_vel", "x_acc", "y_acc", "z_acc"]]
+        y_test = test["pitch_result"]
+
+        model1_x = LinearRegression()
+        model1_x.fit(X1_train, X2_train_x.squeeze())
+        model1_z = LinearRegression()
+        model1_z.fit(X1_train, X2_train_z.squeeze())
+
+        model2 = KNeighborsClassifier(n_neighbors = 35)
+        model2.fit(pd.concat([X2_train_x.x0_extrap, X2_train_z.z0_extrap], axis = 1), y_train)
+
+        X2_pred_x = model1_x.predict(X1_test)
+        X2_pred_z = model1_z.predict(X1_test)
+
+        scores.append(model2.score(pd.concat([pd.DataFrame(X2_pred_x, columns = ["x0_extrap"]), pd.DataFrame(X2_pred_z, columns = ["z0_extrap"])], axis = 1), y_test))
+    
+    print("Mean R squared: " + str(np.mean(scores)))
+    print("Standard deviation R squared: " + str(np.std(scores)))
+
 # make_y0_extrap_plot()
 # make_results_plot()
 # model1_performance()
 # model_comparison()
-pick_n_neighbors()
+# pick_n_neighbors()
+# final_performance()
